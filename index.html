@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Custom Chatbot</div>
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    
+    <!-- Place script tags at the bottom of the body -->
+    <script src="server.js"></script>
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+
+        // Function to send user message to the backend
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Display user message
+            appendMessage('user-message', message);
+
+            // Clear input
+            userInput.value = '';
+
+            // Send message to backend
+            try {
+                const response = await fetch('http://localhost:3002/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+
+                const data = await response.json();
+                if (data.reply) {
+                    // Display bot's response
+                    appendMessage('bot-message', data.reply);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('bot-message', 'Sorry, something went wrong.');
+            }
+        }
+
+        // Function to append messages to the chat box
+        function appendMessage(className, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the latest message
+        }
+
+        // Event listener to handle 'Enter' key
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
